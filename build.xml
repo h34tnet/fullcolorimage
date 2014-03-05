@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project fullcolorimage">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+    <target name="create_run_jar">
+        <jar destfile="C:/Users/sschallerl/sandbox/fullcolorimage/fci.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="net.h34t.fullcolorimage.FullColorImage"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="C:/Users/sschallerl/sandbox/fullcolorimage/bin"/>
+            <zipfileset excludes="META-INF/*.SF" src="C:/Users/sschallerl/sandbox/fullcolorimage/lib/trove-3.0.3.jar"/>
+        </jar>
+    </target>
+</project>
