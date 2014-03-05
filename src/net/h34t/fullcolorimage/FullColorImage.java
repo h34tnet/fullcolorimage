@@ -26,7 +26,7 @@ import javax.imageio.ImageIO;
 
 public class FullColorImage {
 
-    public static final int THREAD_COUNT = 16;
+    public static final int THREAD_COUNT = 1;
 
     public static void main(String[] args) {
         String input = args[0];
@@ -65,7 +65,6 @@ public class FullColorImage {
 
     public void process(String input, String output, long seed, int passes, final int threadCount) throws IOException {
 
-        Random rand = new Random(seed);
         ExecutorService service = Executors.newFixedThreadPool(threadCount);
 
         Log.msg("loading: " + input);
@@ -83,21 +82,20 @@ public class FullColorImage {
 
         // shuffle color list, so threads will get a random part of the available colors leading to a more even
         // distribution
+        Random rand = new Random(seed);
         Colr.shuffleColorsList(rand, availableColors);
 
         // create chunks of (random) available color for each thread
         // this is necessary to avoid that a color is being used twice
-        List<TIntArrayList> colorBuckets = makeColorBuckets(threadCount, availableColors);
+        List<TIntArrayList> colorBuckets = makeColorBuckets(height, availableColors);
 
         Log.msg("matching colors, using seed " + seed + " and " + passes + " passes with " + threadCount + " threads");
-
-        int blockSize = height / threadCount;
 
         long st = System.currentTimeMillis();
 
         // create the workers
-        for (int i = 0; i < threadCount; i++) {
-            service.execute(new Worker(i, seed + i, in, out, blockSize * i, blockSize, width, colorBuckets.get(i), passes));
+        for (int y = 0; y < height; y++) {
+            service.execute(new Task(seed + y, in, out, y, width, colorBuckets.get(y), passes));
         }
 
         service.shutdown();
@@ -114,33 +112,34 @@ public class FullColorImage {
 
         // if not provided, chose an output file name
         if (output == null)
-            output = String.format(input + ".seed.%d.passes.%d.threads.%d.seconds.%d.fullcolor.png",
-                    seed, passes, threadCount, (et - st) / 1000);
+            output = String.format(input + ".seed.%d.passes.%d.threads.%d.fullcolor.png",
+                    seed, passes, threadCount);
 
         // save
         ImageIO.write(out, "PNG", new File(output));
 
         // print statistics
-        Log.msg(width + "x" + height + " with " + threadCount + " threads and " + passes + " passes:");
+        Log.msg(width + "x" + height + " with " + threadCount + " threads and " + passes + " passes (saved to " + output + "):");
         Log.msg(String.format("finished in %dsec or %.2fmin", ((et - st) / 1000), ((et - st) / 1000f / 60f)));
     }
 
     /**
      * Chunks the TIntArrayList into a List of same-sized TIntArrayLists.
      * 
-     * @param threadCount
+     * @param numberOfBuckets
      * @param colors
-     * @return A list of TIntArrayLists
+     * @return A list of numberOfBuckets TIntArrayLists
      */
-    private List<TIntArrayList> makeColorBuckets(int threadCount, TIntArrayList colors) {
-        List<TIntArrayList> buckets = new ArrayList<TIntArrayList>(threadCount);
+    private List<TIntArrayList> makeColorBuckets(int numberOfBuckets, TIntArrayList colors) {
+        List<TIntArrayList> buckets = new ArrayList<TIntArrayList>(numberOfBuckets);
+        int bucketSize = colors.size() / numberOfBuckets;
 
-        for (int i = 0, ii = threadCount; i < ii; i++) {
-            buckets.add(new TIntArrayList(colors.size() / threadCount));
+        for (int i = 0, ii = numberOfBuckets; i < ii; i++) {
+            buckets.add(new TIntArrayList(bucketSize));
         }
 
         for (int i = 0, ii = colors.size(); i < ii; i++) {
-            buckets.get(i % threadCount).add(colors.get(i));
+            buckets.get(i % numberOfBuckets).add(colors.get(i));
         }
 
         return buckets;

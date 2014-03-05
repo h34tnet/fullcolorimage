@@ -16,31 +16,18 @@ two sized images (i.e. 128, 512, 4096). Can be jpg, png or gif (tested only with
 * samplesize: how many available colors are evaluated for the best match
 * numberOfThreads: the size of the thread pool used. the height of the image should be evenly dividable by this number,
 and the number must not exceed the height of the image.
-* outfile: output filename. if omitted, the name will be something like in
+* outfile: output filename. if omitted, the name will be something like the input image file plus the parameters 
+added.
 
 ## Considerations
 
-This is just an evening project. Motivation is from this 
+* This is just an evening project. Motivation is from this 
 [codegolf.stackexchange thread](http://codegolf.stackexchange.com/questions/22144/images-with-all-colors), but i 
-thought about it before.
-
-I stumbled upon certain quirks:
-
-The biggest (the one i can't explain) is: why is it faster the more threads i use? 4096 threads for the 
-Executors.newFixedThreadPool is almost twice as fast as 2048 threads and so on. As I tested it on a quadcore i expected
-performance to get better with each thread until 4 and then get slightly worse again for every additional one. 
-But nope; totally unexpected. No idea why. Note: Threads work on lines. 
-
-Other than that:
+heard and thought about it before.
 
 * Image characteristics don't necessarily get better with a higher sample size; this only means the 
 "better matches" will be used first. If the x position would be chosen sequentially and thread count is the same as line
-count, that'd mean quality'd degenerate from left to right (but x position isn't chosen sequentially anymore).
+count, that'd mean quality'd degenerate from left to right (but x position isn't chosen sequentially anymore). The 
+characteristics change though.
 
 * The same seed with different sample sizes or threads will (obviously) generate different outputs.
-
-
-
-## Possible improvements
-
-* Don't operate on lines, operate on offsets. 

@@ -11,29 +11,31 @@ import java.util.Random;
  * 
  * @author sschallerl
  */
-public class Worker implements Runnable {
+public class Task implements Runnable {
 
     private static final int[] STEPS = new int[] { 1523, 1531, 1543, 1549, 1553, 1559, 1567, 1571, 1579, 1583 };
 
-    private final int number;
     private final long seed;
     private final BufferedImage in;
     private final BufferedImage out;
-    private final int fromLine;
-    private final int lineCount;
+    private final int y;
     private final int width;
     private final TIntArrayList colors;
     private final int sampleSize;
 
-    public Worker(int number, long seed, BufferedImage in, BufferedImage out, int fromLine, int lineCount, int width,
-            TIntArrayList colors, int sampleSize) {
+    public Task(
+            long seed,
+            BufferedImage in,
+            BufferedImage out,
+            int y,
+            int width,
+            TIntArrayList colors,
+            int sampleSize) {
 
-        this.number = number;
         this.seed = seed;
         this.in = in;
         this.out = out;
-        this.fromLine = fromLine;
-        this.lineCount = lineCount;
+        this.y = y;
         this.width = width;
         this.colors = colors;
         this.sampleSize = sampleSize;
@@ -44,16 +46,15 @@ public class Worker implements Runnable {
         Random rand = new Random(this.seed);
 
         int sourceColor, bestMatch, xpos, step;
-        for (int y = fromLine; y < fromLine + lineCount; y++) {
-            Log.msg(String.format("thread %d: %d%%", number, (y - fromLine) * 100 / lineCount));
-            step = STEPS[rand.nextInt(STEPS.length)];
+        step = STEPS[rand.nextInt(STEPS.length)];
 
-            for (int x = 0; x < width; x++) {
-                xpos = x * step % width;
-                sourceColor = in.getRGB(xpos, y);
-                bestMatch = selectBestMatch(rand, sourceColor, colors, sampleSize);
-                out.setRGB(xpos, y, bestMatch);
-            }
+        int offs = rand.nextInt(width);
+
+        for (int x = 0; x < width; x++) {
+            xpos = (offs + x * step) % width;
+            sourceColor = in.getRGB(xpos, y);
+            bestMatch = selectBestMatch(rand, sourceColor, colors, sampleSize);
+            out.setRGB(xpos, y, bestMatch);
         }
     }
 
